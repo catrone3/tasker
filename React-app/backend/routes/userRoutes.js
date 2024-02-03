@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const { body, param } = require("express-validator");
-const validate = require("../middleware/validationMiddleware"); // Import the validation middleware
+const validate = require("../middleware/validation"); // Import the validation middleware
 const User = require("../models/User");
 
 // Validation middleware for user registration

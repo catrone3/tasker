@@ -13,10 +13,12 @@ services:
 
   test:
     build:
-      context: .
+      context: ./backend
       dockerfile: DockerFile.test
     depends_on:
       - mongodb
+    tty: true  # Enable terminal input
+    stdin_open: true  # Keep stdin open even if not attached
 
 volumes:
   mongodata:

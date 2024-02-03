@@ -2,7 +2,7 @@
 const express = require("express");
 const Task = require("../models/Task");
 const { body, query, param } = require("express-validator");
-const validate = require("../middleware/validationMiddleware"); // Import the validation middleware
+const validate = require("../middleware/validation"); // Import the validation middleware
 
 // Validation middleware for creating a task
 const createTaskValidation = [
