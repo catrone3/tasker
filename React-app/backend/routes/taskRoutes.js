@@ -1,7 +1,7 @@
 // Import necessary modules and models
 const express = require("express");
 const Task = require("../models/Task");
-const { body, query } = require("express-validator");
+const { body, query, param } = require("express-validator");
 const validate = require("../middleware/validationMiddleware"); // Import the validation middleware
 
 // Validation middleware for creating a task

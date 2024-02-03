@@ -26,10 +26,7 @@ app.use(authMiddleware);
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb://localhost/task_manager", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect("mongodb://localhost/task_manager", {})
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
