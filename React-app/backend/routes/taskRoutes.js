@@ -1,7 +1,7 @@
 // Import necessary modules and models
 const express = require("express");
 const Task = require("../models/Task");
-const { body } = require("express-validator");
+const { body, query } = require("express-validator");
 const validate = require("../middleware/validationMiddleware"); // Import the validation middleware
 
 // Validation middleware for creating a task
@@ -17,12 +17,30 @@ const createTaskValidation = [
 // Create an Express router
 const router = express.Router();
 
+// Route to get paginated tasks
 router.get("/api/tasks", async (req, res) => {
   try {
-    const tasks = await Task.find();
-    res.json(tasks);
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 tasks per page if not provided
+
+    const startIndex = (page - 1) * limit;
+
+    const tasks = await Task.find().skip(startIndex).limit(limit);
+
+    const totalTasks = await Task.countDocuments();
+    const totalPages = Math.ceil(totalTasks / limit);
+
+    const pagination = {
+      currentPage: page,
+      totalPages: totalPages,
+      pageSize: limit,
+      totalTasks: totalTasks,
+    };
+
+    res.json({ tasks, pagination });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -142,6 +160,112 @@ router.put(
         return res.status(404).json({ message: "Task not found" });
       }
       res.json(updatedTask);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+const searchValidation = [
+  query("query").trim().notEmpty().withMessage("Search query is required"),
+];
+
+// Route to search tasks by title or description
+router.get(
+  "/api/tasks/search",
+  searchValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const query = req.query.query; // Search query parameter
+
+      const tasks = await Task.find({
+        $or: [
+          { title: { $regex: query, $options: "i" } }, // Case-insensitive search by title
+          { description: { $regex: query, $options: "i" } }, // Case-insensitive search by description
+        ],
+      });
+
+      res.json(tasks);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+const dueDateFilterValidation = [
+  query("startDate").isISO8601().withMessage("Invalid start date format"),
+  query("endDate").isISO8601().withMessage("Invalid end date format"),
+];
+
+// Route to filter tasks by due date range
+router.get(
+  "/api/tasks/filter/by-due-date",
+  dueDateFilterValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const startDate = new Date(req.query.startDate); // Start date query parameter
+      const endDate = new Date(req.query.endDate); // End date query parameter
+
+      const tasks = await Task.find({
+        dueDate: { $gte: startDate, $lte: endDate }, // Filter tasks with due dates within the specified range
+      });
+
+      res.json(tasks);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Validation middleware for filtering tasks by urgency
+const urgencyFilterValidation = [
+  query("urgency")
+    .isIn(["Low", "Medium", "High"])
+    .withMessage("Invalid urgency level"),
+];
+
+// Validation middleware for filtering tasks by completion status
+const completionStatusFilterValidation = [
+  query("completed")
+    .isBoolean()
+    .withMessage("Completed status must be a boolean value"),
+];
+
+// Apply validation middleware to the respective route handlers
+router.get(
+  "/api/tasks/filter/by-urgency",
+  urgencyFilterValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const { urgency } = req.query;
+
+      const tasks = await Task.find({ urgency });
+
+      res.json(tasks);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+router.get(
+  "/api/tasks/filter/by-completion-status",
+  completionStatusFilterValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const { completed } = req.query;
+
+      const tasks = await Task.find({ completed });
+
+      res.json(tasks);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
