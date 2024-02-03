@@ -4,6 +4,10 @@ FROM node:latest
 # Set the working directory inside the container
 WORKDIR /app
 
+# Generate a random JWT secret key during the build process
+RUN JWT_SECRET=$(openssl rand -base64 32 | tr -d '\n') && \
+    echo "JWT_SECRET=$JWT_SECRET" >> /etc/environment
+
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./
 

@@ -9,11 +9,21 @@ chai.use(chaiHttp);
 const expect = chai.expect;
 
 describe("Authentication API Tests", () => {
-  // Before running tests, clear the User and Token collections in the database
-  before(async () => {
-    await User.deleteMany({});
-    await Token.deleteMany({});
-  }, 5000);
+  // Test for POST /api/register endpoint
+  describe("POST /api/register", () => {
+    it("should register a new user", async () => {
+      const newUser = {
+        username: "testuser",
+        email: "test@example.com",
+        password: "Password123!",
+      };
+      const res = await chai.request(app).post("/api/register").send(newUser);
+      expect(res).to.have.status(201);
+      expect(res.body)
+        .to.have.property("message")
+        .equal("User registered successfully");
+    });
+  });
 
   // Test for POST /api/login endpoint
   describe("POST /api/login", () => {

@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mongodb:
+    container_name: mongodb
+    build:
+      context: .
+      dockerfile: DockerFile
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_DATABASE=config
+      - MONGO_USERNAME=tasker
+      - MONGO_PASSWORD=taskerpassword
+      - MONGO_DBNAME=task_manager
+    ports:
+      - 27017:27017
+
+volumes:
+  mongodata:

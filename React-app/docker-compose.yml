@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    container_name: backend
     build: ./backend
     ports:
       - "5000:5000"
@@ -18,7 +19,16 @@ services:
       - backend
 
   mongodb:
-    image: mongo
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_DBNAME=${MONGO_DBNAME}
     ports:
       - "27017:27017"
     volumes:

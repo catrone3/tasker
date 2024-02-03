@@ -38,6 +38,7 @@ router.get("/api/tasks", async (req, res) => {
     };
 
     res.json({ tasks, pagination });
+    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -57,6 +58,7 @@ router.post("/api/tasks", createTaskValidation, validate, async (req, res) => {
   try {
     const newTask = await task.save();
     res.status(201).json(newTask);
+    done();
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -104,6 +106,7 @@ router.get("/api/tasks/next", async (req, res) => {
 
     // Return the next task as the response
     res.json(nextTask);
+    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -117,6 +120,7 @@ router.delete("/api/tasks/:id", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
     res.json({ message: "Task deleted successfully" });
+    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -160,6 +164,7 @@ router.put(
         return res.status(404).json({ message: "Task not found" });
       }
       res.json(updatedTask);
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -188,6 +193,7 @@ router.get(
       });
 
       res.json(tasks);
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -215,6 +221,7 @@ router.get(
       });
 
       res.json(tasks);
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -248,6 +255,7 @@ router.get(
       const tasks = await Task.find({ urgency });
 
       res.json(tasks);
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -266,6 +274,7 @@ router.get(
       const tasks = await Task.find({ completed });
 
       res.json(tasks);
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });

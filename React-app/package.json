@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "sudo docker-compose -f ./backend/docker-compose.test.yml up --abort-on-container-exit"
+    "test": "./backend/scripts/test.sh"
   },
   "author": "catrone3",
   "license": "ISC"

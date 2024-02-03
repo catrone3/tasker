@@ -19,22 +19,38 @@ const customLogger = (req, res, next) => {
   next(); // Call the next middleware in the chain
 };
 
+const username = process.env.MONGO_USERNAME || "root";
+const password = process.env.MONGO_PASSWORD || "example";
+const database = process.env.MONGO_DATABASE || "task_manager";
+
+const connectionString = `mongodb://mongodb:27017`;
+
 // Middleware
-app.use(customLogger);
+app.use(morgan("dev"));
 app.use(bodyParser.json());
-app.use(authMiddleware);
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb://localhost/task_manager", {})
+  .connect(connectionString, {
+    user: username,
+    pass: password,
+    dbName: database,
+  })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
-// More routes for updating and deleting tasks
-
+// login and logout routes
 app.use(authRoutes);
+
+//auth middleware
+app.use(authMiddleware);
+// More routes for updating and deleting tasks
 app.use(taskController);
 app.use(userRoutes);
 
 // Start the server
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`Server started on port ${PORT}`)
+);
+
+module.exports = server;

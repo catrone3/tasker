@@ -4,49 +4,7 @@ const bcrypt = require("bcrypt");
 const { body, param } = require("express-validator");
 const validate = require("../middleware/validation"); // Import the validation middleware
 const User = require("../models/User");
-
-// Validation middleware for user registration
-const registerValidation = [
-  body("username").notEmpty().withMessage("Username is required"),
-  body("email").isEmail().withMessage("Invalid email"),
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
-    .matches(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$/)
-    .withMessage(
-      "Password must contain at least one number and one special character"
-    ),
-];
-
-// Route for user registration
-router.post("/api/register", registerValidation, validate, async (req, res) => {
-  const { username, email, password } = req.body;
-
-  try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    await newUser.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+const { deleteOne } = require("../models/Task");
 
 const passwordUpdateValidation = [
   param("id").isMongoId().withMessage("Invalid user ID"),
@@ -95,6 +53,7 @@ router.put(
       await user.save();
 
       res.status(200).json({ message: "Password updated successfully" });
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -130,6 +89,7 @@ router.put(
       await user.save();
 
       res.status(200).json({ message: "Email updated successfully" });
+      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });

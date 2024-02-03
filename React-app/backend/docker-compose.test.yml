@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  test:
+    container_name: backend-test
+    build:
+      context: ./
+      dockerfile: DockerFile.test
+    environment:
+      MONGO_USERNAME: tasker
+      MONGO_PASSWORD: taskerpassword
+      MONGO_DATABASE: task_manager
+      
+    tty: true  # Enable terminal input
+    stdin_open: true  # Keep stdin open even if not attached

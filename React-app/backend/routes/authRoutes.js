@@ -7,8 +7,53 @@ const { body } = require("express-validator");
 const User = require("../models/User");
 const Token = require("../models/Token");
 const validate = require("../middleware/validation");
+const { deleteOne } = require("../models/Task");
 
 const router = express.Router();
+
+// Validation middleware for user registration
+const registerValidation = [
+  body("username").notEmpty().withMessage("Username is required"),
+  body("email").isEmail().withMessage("Invalid email"),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .matches(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$/)
+    .withMessage(
+      "Password must contain at least one number and one special character"
+    ),
+];
+
+// Route for user registration
+router.post("/api/register", registerValidation, validate, async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered successfully" });
+    done();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Validation middleware for login route
 const loginValidation = [
@@ -43,6 +88,7 @@ router.post("/api/login", loginValidation, validate, async (req, res) => {
     await tokenData.save();
 
     res.json({ token });
+    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -64,6 +110,7 @@ router.post("/api/logout", async (req, res) => {
 
     // Respond with a success message
     res.status(200).json({ message: "Logout successful" });
+    done();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
