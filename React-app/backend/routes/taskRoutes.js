@@ -1,0 +1,153 @@
+// Import necessary modules and models
+const express = require("express");
+const Task = require("../models/Task");
+const { body } = require("express-validator");
+const validate = require("../middleware/validationMiddleware"); // Import the validation middleware
+
+// Validation middleware for creating a task
+const createTaskValidation = [
+  body("title").notEmpty().withMessage("Title is required"),
+  body("description").notEmpty().withMessage("Description is required"),
+  body("dueDate").isISO8601().toDate().withMessage("Invalid due date format"),
+  body("urgency")
+    .isIn(["High", "Medium", "Low"])
+    .withMessage("Invalid urgency level"),
+  // Add validation rules for other fields as needed
+];
+// Create an Express router
+const router = express.Router();
+
+router.get("/api/tasks", async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post("/api/tasks", createTaskValidation, validate, async (req, res) => {
+  const task = new Task({
+    title: req.body.title,
+    description: req.body.description,
+    dueDate: req.body.dueDate,
+    urgency: req.body.urgency,
+    fields: req.body.fields,
+    completed: false,
+  });
+
+  try {
+    const newTask = await task.save();
+    res.status(201).json(newTask);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Define route to retrieve the next task to work on
+router.get("/api/tasks/next", async (req, res) => {
+  try {
+    // Fetch all tasks from the database
+    const tasks = await Task.find();
+
+    // Calculate priority score for each task
+    const weightedTasks = tasks.map((task) => {
+      // Calculate due date factor (0 to 1) based on days until due date
+      const daysUntilDue = Math.max(
+        0,
+        (task.dueDate - Date.now()) / (1000 * 60 * 60 * 24)
+      ); // Convert milliseconds to days
+      const dueDateFactor = 1 / (1 + daysUntilDue); // Inverse relationship: closer due date => higher factor
+
+      // Assign urgency factor based on urgency level (could be defined as a constant or from the task object)
+      const urgencyFactor =
+        task.urgency === "High"
+          ? 1
+          : task.urgency === "Medium"
+          ? 0.5
+          : task.urgency === "Low"
+          ? 0.25
+          : 0; // Default to lowest urgency if not specified
+
+      // Calculate priority score
+      const weight1 = 0.7; // Weight for due date factor
+      const weight2 = 0.3; // Weight for urgency factor
+      const priorityScore = weight1 * dueDateFactor + weight2 * urgencyFactor;
+
+      // Return task with priority score
+      return { task, priorityScore };
+    });
+
+    // Sort tasks by priority score in descending order
+    weightedTasks.sort((a, b) => b.priorityScore - a.priorityScore);
+
+    // Select the task with the highest priority score
+    const nextTask = weightedTasks[0].task;
+
+    // Return the next task as the response
+    res.json(nextTask);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete("/api/tasks/:id", async (req, res) => {
+  try {
+    const deletedTask = await Task.findByIdAndDelete(req.params.id);
+    if (!deletedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    res.json({ message: "Task deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+const updateTaskValidation = [
+  param("id").isMongoId().withMessage("Invalid task ID"),
+  body("title").optional().notEmpty().withMessage("Title is required"),
+  body("description")
+    .optional()
+    .notEmpty()
+    .withMessage("Description is required"),
+  body("dueDate")
+    .optional()
+    .isISO8601()
+    .toDate()
+    .withMessage("Invalid due date format"),
+  body("urgency")
+    .optional()
+    .isIn(["High", "Medium", "Low"])
+    .withMessage("Invalid urgency level"),
+  // Add validation rules for other fields as needed
+];
+
+// Route to update a task
+router.put(
+  "/api/tasks/:id",
+  updateTaskValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const updatedTask = await Task.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+        }
+      );
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      res.json(updatedTask);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+//Export the Module
+module.exports = router;
