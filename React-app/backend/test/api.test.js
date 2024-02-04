@@ -74,7 +74,6 @@ describe("API Tests", () => {
   before(async () => {
     try {
       await Task.deleteMany({});
-      await User.deleteMany({});
     } catch (error) {
       console.error("Error deleting documents:", error);
     }
@@ -96,7 +95,7 @@ describe("API Tests", () => {
 
   // Test for GET /api/tasks endpoint
   describe("GET /api/tasks", () => {
-    it.only("should return an array of tasks", async () => {
+    it("should return an array of tasks", async () => {
       console.log("starting unit test");
       const page = 1;
       const limit = 10;
@@ -117,7 +116,7 @@ describe("API Tests", () => {
 
   // Test for POST /api/tasks endpoint
   describe("POST /api/tasks", () => {
-    it("should create a new task", async () => {
+    it.only("should create a new task", async () => {
       const newTask = {
         title: "Test Task",
         description: "This is a test task",

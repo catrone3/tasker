@@ -26,7 +26,7 @@ const database = process.env.MONGO_DATABASE || "task_manager";
 const connectionString = `mongodb://mongodb:27017/${database}`;
 
 // Middleware
-app.use(customLogger);
+app.use(morgan("dev"));
 app.use(bodyParser.json());
 
 // Mongoose connection logging

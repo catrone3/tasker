@@ -23,14 +23,11 @@ router.get("/api/tasks", async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
     const limit = parseInt(req.query.limit) || 10; // Default to 10 tasks per page if not provided
 
-    console.log(req.user);
-
     const startIndex = (page - 1) * limit;
 
     const tasks = await Task.find({ userId: req.user._id })
       .skip(startIndex)
       .limit(limit);
-    console.log(tasks);
 
     const totalTasks = await Task.countDocuments();
     const totalPages = Math.ceil(totalTasks / limit);
