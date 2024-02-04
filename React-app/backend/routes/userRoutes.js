@@ -53,7 +53,6 @@ router.put(
       await user.save();
 
       res.status(200).json({ message: "Password updated successfully" });
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -89,7 +88,6 @@ router.put(
       await user.save();
 
       res.status(200).json({ message: "Email updated successfully" });
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });

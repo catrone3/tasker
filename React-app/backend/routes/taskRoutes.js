@@ -23,9 +23,14 @@ router.get("/api/tasks", async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
     const limit = parseInt(req.query.limit) || 10; // Default to 10 tasks per page if not provided
 
+    console.log(req.user);
+
     const startIndex = (page - 1) * limit;
 
-    const tasks = await Task.find().skip(startIndex).limit(limit);
+    const tasks = await Task.find({ userId: req.user._id })
+      .skip(startIndex)
+      .limit(limit);
+    console.log(tasks);
 
     const totalTasks = await Task.countDocuments();
     const totalPages = Math.ceil(totalTasks / limit);
@@ -38,7 +43,6 @@ router.get("/api/tasks", async (req, res) => {
     };
 
     res.json({ tasks, pagination });
-    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -58,7 +62,6 @@ router.post("/api/tasks", createTaskValidation, validate, async (req, res) => {
   try {
     const newTask = await task.save();
     res.status(201).json(newTask);
-    done();
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -68,7 +71,7 @@ router.post("/api/tasks", createTaskValidation, validate, async (req, res) => {
 router.get("/api/tasks/next", async (req, res) => {
   try {
     // Fetch all tasks from the database
-    const tasks = await Task.find();
+    const tasks = await Task.find({ userId: req.user._id });
 
     // Calculate priority score for each task
     const weightedTasks = tasks.map((task) => {
@@ -106,7 +109,6 @@ router.get("/api/tasks/next", async (req, res) => {
 
     // Return the next task as the response
     res.json(nextTask);
-    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -120,7 +122,6 @@ router.delete("/api/tasks/:id", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
     res.json({ message: "Task deleted successfully" });
-    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -164,7 +165,6 @@ router.put(
         return res.status(404).json({ message: "Task not found" });
       }
       res.json(updatedTask);
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -186,6 +186,7 @@ router.get(
       const query = req.query.query; // Search query parameter
 
       const tasks = await Task.find({
+        userId: req.user._id,
         $or: [
           { title: { $regex: query, $options: "i" } }, // Case-insensitive search by title
           { description: { $regex: query, $options: "i" } }, // Case-insensitive search by description
@@ -193,7 +194,6 @@ router.get(
       });
 
       res.json(tasks);
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -217,11 +217,11 @@ router.get(
       const endDate = new Date(req.query.endDate); // End date query parameter
 
       const tasks = await Task.find({
+        userId: req.user._id,
         dueDate: { $gte: startDate, $lte: endDate }, // Filter tasks with due dates within the specified range
       });
 
       res.json(tasks);
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -252,10 +252,9 @@ router.get(
     try {
       const { urgency } = req.query;
 
-      const tasks = await Task.find({ urgency });
+      const tasks = await Task.find({ userId: req.user._id, urgency });
 
       res.json(tasks);
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -271,10 +270,9 @@ router.get(
     try {
       const { completed } = req.query;
 
-      const tasks = await Task.find({ completed });
+      const tasks = await Task.find({ userId: req.user._id, completed });
 
       res.json(tasks);
-      done();
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });

@@ -13,8 +13,7 @@ services:
       - MONGO_USERNAME=tasker
       - MONGO_PASSWORD=taskerpassword
       - MONGO_DBNAME=task_manager
-    ports:
-      - 27017:27017
 
-volumes:
-  mongodata:
+networks:
+  default:
+    name: task_manager

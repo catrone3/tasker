@@ -3,11 +3,12 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const jwtSecretKey = process.env.JWT_SECRET_KEY || process.env.JWT_SECRET;
+const jwtSecretKey = process.env.JWT_SECRET;
 
 const authMiddleware = async (req, res, next) => {
+  console.log("in authmiddleware");
   // Extract the JWT token from the Authorization header
-  const token = req.header("Authorization");
+  const token = req.header.authorization.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Authorization token is missing" });
@@ -16,6 +17,7 @@ const authMiddleware = async (req, res, next) => {
   try {
     // Verify the JWT token
     const decoded = jwt.verify(token, jwtSecretKey);
+    console.log(decoded);
 
     // Check if the user exists
     const user = await User.findById(decoded.userId);

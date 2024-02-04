@@ -13,8 +13,8 @@ describe("Authentication API Tests", () => {
   describe("POST /api/register", () => {
     it("should register a new user", async () => {
       const newUser = {
-        username: "testuser",
-        email: "test@example.com",
+        username: "testregistration",
+        email: "registration@example.com",
         password: "Password123!",
       };
       const res = await chai.request(app).post("/api/register").send(newUser);
@@ -30,15 +30,15 @@ describe("Authentication API Tests", () => {
     it("should login and return a JWT token", async () => {
       // Create a test user
       const newUser = {
-        username: "testuser",
-        email: "test@example.com",
+        username: "testlogin",
+        email: "login@example.com",
         password: "Password123!",
       };
       await chai.request(app).post("/api/register").send(newUser);
 
       // Login with the test user credentials
       const loginCredentials = {
-        email: "test@example.com",
+        email: "login@example.com",
         password: "Password123!",
       };
       const res = await chai
@@ -55,7 +55,7 @@ describe("Authentication API Tests", () => {
     it("should logout a user and remove the token from database", async () => {
       // Login to get a token
       const loginCredentials = {
-        email: "test@example.com",
+        email: "logout@example.com",
         password: "Password123!",
       };
       const loginRes = await chai
@@ -68,7 +68,7 @@ describe("Authentication API Tests", () => {
       const res = await chai
         .request(app)
         .post("/api/logout")
-        .set("Authorization", token);
+        .set("Authorization", `Bearer ${token}`);
       expect(res).to.have.status(200);
 
       // Check if the token is removed from the database

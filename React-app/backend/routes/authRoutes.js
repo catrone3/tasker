@@ -24,6 +24,8 @@ const registerValidation = [
     ),
 ];
 
+const jwtSecretKey = process.env.JWT_SECRET;
+
 // Route for user registration
 router.post("/api/register", registerValidation, validate, async (req, res) => {
   const { username, email, password } = req.body;
@@ -45,10 +47,11 @@ router.post("/api/register", registerValidation, validate, async (req, res) => {
       password: hashedPassword,
     });
 
-    await newUser.save();
+    const user = await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully" });
-    done();
+    res
+      .status(201)
+      .json({ message: "User registered successfully", id: user._id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -88,7 +91,6 @@ router.post("/api/login", loginValidation, validate, async (req, res) => {
     await tokenData.save();
 
     res.json({ token });
-    done();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -110,7 +112,6 @@ router.post("/api/logout", async (req, res) => {
 
     // Respond with a success message
     res.status(200).json({ message: "Logout successful" });
-    done();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

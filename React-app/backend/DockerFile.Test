@@ -20,5 +20,10 @@ COPY . .
 # Expose the port your app runs on (if applicable)
 # EXPOSE 3000
 
+# Adding docker wait tool
+ENV WAIT_VERSION 2.12.1
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
+
 # Command to run your tests
 CMD ["npm", "test"]
