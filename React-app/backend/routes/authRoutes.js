@@ -118,4 +118,54 @@ router.post("/api/logout", async (req, res) => {
   }
 });
 
+// GET /api/users/:id/projects
+router.get("/api/users/:id/projects", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate("projects");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ projects: user.projects });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /api/users/:id/projects
+router.post("/api/users/:id/projects", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const { projectId } = req.body;
+    // Add the project to the user's list of projects
+    user.projects.push(projectId);
+    await user.save();
+    res.status(201).json({ message: "Project added to user" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// DELETE /api/users/:id/projects/:projectId
+router.delete("/api/users/:id/projects/:projectId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const { projectId } = req.params;
+    // Remove the project from the user's list of projects
+    user.projects = user.projects.filter((id) => id.toString() !== projectId);
+    await user.save();
+    res.json({ message: "Project removed from user" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

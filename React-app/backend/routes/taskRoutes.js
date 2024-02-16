@@ -3,6 +3,7 @@ const express = require("express");
 const Task = require("../models/Task");
 const { body, query, param } = require("express-validator");
 const validate = require("../middleware/validation"); // Import the validation middleware
+const extractProjectId = require("../middleware/extractProjectId");
 
 // Validation middleware for creating a task
 const createTaskValidation = [
@@ -12,6 +13,10 @@ const createTaskValidation = [
   body("urgency")
     .isIn(["High", "Medium", "Low"])
     .withMessage("Invalid urgency level"),
+  body("projectId").exists().withMessage("Project ID is required"),
+  body("completed")
+    .isBoolean()
+    .withMessage("Completed field must be a boolean"),
   // Add validation rules for other fields as needed
 ];
 // Create an Express router
@@ -25,7 +30,7 @@ router.get("/api/tasks", async (req, res) => {
 
     const startIndex = (page - 1) * limit;
 
-    const tasks = await Task.find({ userId: req.user._id })
+    const tasks = await Task.find({ assignedTo: req.user._id })
       .skip(startIndex)
       .limit(limit);
 
@@ -46,29 +51,71 @@ router.get("/api/tasks", async (req, res) => {
   }
 });
 
-router.post("/api/tasks", createTaskValidation, validate, async (req, res) => {
-  const task = new Task({
-    title: req.body.title,
-    description: req.body.description,
-    dueDate: req.body.dueDate,
-    urgency: req.body.urgency,
-    fields: req.body.fields,
-    completed: false,
-  });
-
-  try {
-    const newTask = await task.save();
-    res.status(201).json(newTask);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+// GET /api/projects/:projectId/tasks
+router.get(
+  "/api/projects/:projectId/tasks",
+  extractProjectId,
+  async (req, res) => {
+    try {
+      const tasks = await Task.find({ project: req.params.projectId });
+      res.json({ tasks });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
   }
-});
+);
+
+// POST /api/projects/:projectId/tasks
+router.post(
+  "/api/projects/:projectId/tasks",
+  extractProjectId,
+  createTaskValidation,
+  validate,
+  async (req, res) => {
+    try {
+      const { title, description, dueDate, urgency, completed, assignedTo } =
+        req.body;
+      const newTask = new Task({
+        title,
+        description,
+        dueDate,
+        urgency,
+        completed,
+        projectId: req.params.projectId,
+        assignedTo,
+        createdBy: req.user._id,
+      });
+      const savedTask = await newTask.save();
+      res.status(201).json({ task: savedTask });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// DELETE /api/projects/:projectId/tasks/:taskId
+router.delete(
+  "/api/projects/:projectId/tasks/:taskId",
+  extractProjectId,
+  async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      await Task.findByIdAndDelete(taskId);
+      res.json({ message: "Task deleted successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 // Define route to retrieve the next task to work on
 router.get("/api/tasks/next", async (req, res) => {
   try {
     // Fetch all tasks from the database
-    const tasks = await Task.find({ userId: req.user._id });
+    const tasks = await Task.find({ assignedTo: req.user._id });
 
     // Calculate priority score for each task
     const weightedTasks = tasks.map((task) => {
@@ -106,19 +153,6 @@ router.get("/api/tasks/next", async (req, res) => {
 
     // Return the next task as the response
     res.json(nextTask);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.delete("/api/tasks/:id", async (req, res) => {
-  try {
-    const deletedTask = await Task.findByIdAndDelete(req.params.id);
-    if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-    res.json({ message: "Task deleted successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -183,7 +217,7 @@ router.get(
       const query = req.query.query; // Search query parameter
 
       const tasks = await Task.find({
-        userId: req.user._id,
+        assignedTo: req.user._id,
         $or: [
           { title: { $regex: query, $options: "i" } }, // Case-insensitive search by title
           { description: { $regex: query, $options: "i" } }, // Case-insensitive search by description
@@ -214,7 +248,7 @@ router.get(
       const endDate = new Date(req.query.endDate); // End date query parameter
 
       const tasks = await Task.find({
-        userId: req.user._id,
+        assignedTo: req.user._id,
         dueDate: { $gte: startDate, $lte: endDate }, // Filter tasks with due dates within the specified range
       });
 
