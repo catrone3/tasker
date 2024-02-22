@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_DATABASE: task_manager
+      MONGO_USERNAME: tasker
+      MONGO_PASSWORD: taskerpassword
+
+  test:
+    container_name: backend-test
+    build:
+      context: ./
+      dockerfile: DockerFile.test
+    command: sh -c "/wait && npm start"
+    environment:
+      JWT_SECRET: 5c728fbdf09e82ffe3f9f239d70c160e28e05a4c8969fd7e932763339da22b1ca8d7c041f8234daebd5aca012d8a4dcfc0229cde5f0e32ccf4ff3f4eb5494f87ebdf4565a064cb6ac8081347bc186c344848a0cdb12236cf3cbc05a3c5ca6f3b6cd846fe4adc24667e7b4bc9399e24d7a3c734dd8c51bc2e097190af17686b40f4419caddd4f5ba714e77b5714c86a46dad706651d00352dc61890322a53af7db3fd21a2b89d9ea04979bc7b252f09d39e0e2388b7cab101819c4dbecd06393e30d7dcf7b239689a1914ca94bab9c3e2a3a188f1b2e27d646c6d53332ccf66ce5a314591fae8f8f455b214027729b51db15dd2a00106f839a84b93243ef8a362
+      MONGO_USERNAME: root
+      MONGO_PASSWORD: rootpassword
+      MONGO_DATABASE: task_manager 
+      WAIT_HOSTS: mongodb:27017
+      WAIT_HOSTS_TIMEOUT: 300
+      WAIT_SLEEP_INTERVAL: 5
+      WAIT_HOST_CONNECT_TIMEOUT: 30
+    ports:
+      - 5000:5000
+    tty: true  # Enable terminal input
+    stdin_open: true  # Keep stdin open even if not attached
+
+volumes:
+  mongodata:

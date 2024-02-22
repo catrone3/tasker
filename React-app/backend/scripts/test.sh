@@ -12,5 +12,5 @@ docker image rm mongo
 # pwd
 # docker-compose -f ./docker-compose.yml up -d
 # sleep 30
-cd backend
+#cd backend
 docker-compose -f ./docker-compose.test.yml up --abort-on-container-exit

@@ -9,6 +9,7 @@ const authMiddleware = require("./middleware/authMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const initializeDefaultSettings = require("./scripts/initializer");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -65,7 +66,7 @@ app.use(authMiddleware);
 app.use(projectRoutes);
 app.use(taskController);
 app.use(userRoutes);
-
+initializeDefaultSettings();
 // Start the server
 const server = app.listen(PORT, () =>
   console.log(`Server started on port ${PORT}`)

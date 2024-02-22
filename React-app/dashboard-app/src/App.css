@@ -1,0 +1,46 @@
+/* App.css */
+/*
+Dark regions- #2F4858
+light regions - #EDE6E3
+Grey regions - #DADAD9
+Secondary accent color - #5BC3EB
+Main accent color - #F06449
+*/
+.App {
+    font-family: Arial, sans-serif;
+    background-color: #EDE6E3; 
+    color: #2F4858; /* Text */
+  }
+  
+  .container {
+    display: flex;
+  }
+  
+  nav {
+    background-color: #2F4858; /* Grey regions */
+    color: #DADad9; /* Dark regions */
+    padding: 20px;
+    text-align: center;
+  }
+  
+  aside {
+    background-color: #F06449; /* Main accent color */
+    width: 200px;
+    padding: 20px;
+  }
+  
+  aside ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  aside ul li {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  main {
+    flex: 1;
+    padding: 20px;
+  }
+  

@@ -308,17 +308,29 @@ describe("API Tests", () => {
 
   describe("GET /api/users/:id/projects", () => {
     it("should return projects associated with the user", async () => {
-      const res = await chai.request(app).get(`/api/users/${userId}/projects`);
+      const project1 = new Project({ name: "Test Project" });
+      await project1.save();
+      const user = await User.findById(testUser);
+      user.projects.push(project1);
+      await user.save();
+      const res = await chai
+        .request(app)
+        .get(`/api/users/${user._id}/projects`);
+      console.log(res);
       expect(res).to.have.status(200);
       expect(res.body.projects).to.be.an("array").that.has.lengthOf(1);
       expect(res.body.projects[0]).to.deep.include({
-        _id: projectId,
+        _id: project1._id.toString(),
         name: "Test Project",
       });
     });
 
     it("should return 404 if user not found", async () => {
-      const res = await chai.request(app).get(`/api/users/invalid-id/projects`);
+      const project1 = new Project({ name: "Test Project" });
+      await project1.save();
+      const res = await chai
+        .request(app)
+        .get(`/api/users/${project1._id}/projects`);
       expect(res).to.have.status(404);
       expect(res.body).to.have.property("message").equal("User not found");
     });
@@ -328,27 +340,28 @@ describe("API Tests", () => {
     it("should add a project to the user's list of projects", async () => {
       const newProject = new Project({ name: "New Project" });
       await newProject.save();
-
       const res = await chai
         .request(app)
-        .post(`/api/users/${userId}/projects`)
+        .post(`/api/users/${testUser}/projects`)
         .send({ projectId: newProject._id });
-
       expect(res).to.have.status(201);
       expect(res.body)
         .to.have.property("message")
         .equal("Project added to user");
 
-      const updatedUser = await User.findById(userId).populate("projects");
-      expect(updatedUser.projects.map((p) => p.toString())).to.include(
+      const updatedUser = await User.findById(testUser).populate("projects");
+      console.log(updatedUser.projects.map((p) => p._id.toString()));
+      expect(updatedUser.projects.map((p) => p._id.toString())).to.include(
         newProject._id.toString()
       );
     });
 
     it("should return 404 if user not found", async () => {
+      const project1 = new Project({ name: "Test Project" });
+      await project1.save();
       const res = await chai
         .request(app)
-        .post(`/api/users/invalid-id/projects`);
+        .post(`/api/users/${project1._id}/projects`);
       expect(res).to.have.status(404);
       expect(res.body).to.have.property("message").equal("User not found");
     });
@@ -356,24 +369,30 @@ describe("API Tests", () => {
 
   describe("DELETE /api/users/:id/projects/:projectId", () => {
     it("should remove a project from the user's list of projects", async () => {
+      const newProject = new Project({ name: "New Project" });
+      await newProject.save();
+      const user = await User.findById(testUser);
+      user.projects.push(newProject._id);
       const res = await chai
         .request(app)
-        .delete(`/api/users/${userId}/projects/${projectId}`);
+        .delete(`/api/users/${testUser}/projects/${newProject._id}`);
       expect(res).to.have.status(200);
       expect(res.body)
         .to.have.property("message")
         .equal("Project removed from user");
 
-      const updatedUser = await User.findById(userId).populate("projects");
+      const updatedUser = await User.findById(testUser).populate("projects");
       expect(updatedUser.projects.map((p) => p.toString())).to.not.include(
-        projectId.toString()
+        newProject._id.toString()
       );
     });
 
     it("should return 404 if user not found", async () => {
+      const project1 = new Project({ name: "Test Project" });
+      await project1.save();
       const res = await chai
         .request(app)
-        .delete(`/api/users/invalid-id/projects/${projectId}`);
+        .delete(`/api/users/${project1._id}/projects/${testProject._id}`);
       expect(res).to.have.status(404);
       expect(res.body).to.have.property("message").equal("User not found");
     });

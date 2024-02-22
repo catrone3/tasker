@@ -99,6 +99,7 @@ router.put(
 router.get("/api/users/:id/projects", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).populate("projects");
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
