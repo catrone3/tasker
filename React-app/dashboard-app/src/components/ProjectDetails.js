@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Typography } from "@mui/material";
+import { getProject } from "../helpers/api";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
 
   useEffect(() => {
-    // Fetch project details based on projectId
-    // You can use this useEffect to fetch project details when projectId changes
-    // Update the 'project' state with the fetched project data
+    const data = fetchProject(projectId);
+    setProject(data);
   }, [projectId]);
+
+  const fetchProject = async (projectId) => {
+    try {
+      const data = getProject(projectId);
+      return data;
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      throw error;
+    }
+  };
 
   if (!project) {
     return <div>Loading...</div>;

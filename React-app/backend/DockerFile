@@ -20,5 +20,10 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 5000
 
+# Adding docker wait tool
+ENV WAIT_VERSION 2.12.1
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
+
 # Command to run the application
 CMD ["npm", "start"]

@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Typography, List, ListItem, ListItemText } from "@mui/material";
 import { Link } from "react-router-dom";
+import { getProjects } from "../helpers/api";
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Fetch projects when component mounts
-    fetchProjects();
-  }, []);
-
   const fetchProjects = async () => {
     try {
-      // Make API request to fetch projects
-      const response = await fetch("/api/projects");
-      if (!response.ok) {
-        throw new Error("Failed to fetch projects");
-      }
-      const data = await response.json();
+      const data = await getProjects();
       setProjects(data.projects);
       setLoading(false);
     } catch (error) {
@@ -27,6 +18,11 @@ const Projects = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Fetch projects when component mounts
+    fetchProjects();
+  }, []);
 
   if (loading) {
     return <Typography>Loading...</Typography>;
@@ -41,17 +37,23 @@ const Projects = () => {
       <Typography variant="h4" gutterBottom>
         Projects
       </Typography>
-      <List>
-        {projects.map((project) => (
-          <ListItem key={project.id}>
-            <ListItemText
-              primary={
-                <Link to={`/projects/${project.id}`}>{project.name}</Link>
-              }
-            />
-          </ListItem>
-        ))}
-      </List>
+      {loading ? (
+        <p>Loading projects...</p>
+      ) : projects.length === 0 ? (
+        <p>No projects available.</p>
+      ) : (
+        <List>
+          {projects.map((project) => (
+            <ListItem key={project.id}>
+              <ListItemText
+                primary={
+                  <Link to={`/projects/${project.id}`}>{project.name}</Link>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ const { body, param } = require("express-validator");
 const validate = require("../middleware/validation"); // Import the validation middleware
 const User = require("../models/User");
 const { deleteOne } = require("../models/Task");
+const Project = require("../models/Project");
 
 const passwordUpdateValidation = [
   param("id").isMongoId().withMessage("Invalid user ID"),
@@ -117,7 +118,7 @@ router.post("/api/users/:id/projects", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const { projectId } = req.body;
+    const projectId = await Project.find(req.body);
     // Add the project to the user's list of projects
     user.projects.push(projectId);
     await user.save();

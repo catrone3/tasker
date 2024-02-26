@@ -10,9 +10,12 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const initializeDefaultSettings = require("./scripts/initializer");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(cors());
 
 // Custom logging middleware
 const customLogger = (req, res, next) => {

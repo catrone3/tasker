@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { getNextTasks } from "../helpers/api";
 
 const Dashboard = () => {
   // State to store the tasks data
@@ -8,7 +8,7 @@ const Dashboard = () => {
   // Function to fetch data from the API endpoint
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("/api/tasks/next");
+      const response = await getNextTasks();
       setTasks(response.data.tasks); // Assuming the response contains tasks array
     } catch (error) {
       console.error("Error fetching tasks:", error);

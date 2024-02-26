@@ -66,6 +66,7 @@ const loginValidation = [
 
 router.post("/api/login", loginValidation, validate, async (req, res) => {
   const { email, password } = req.body;
+  console.log(password);
 
   try {
     // Check if user exists
@@ -73,8 +74,8 @@ router.post("/api/login", loginValidation, validate, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     // Check password
+    const saltRounds = 10;
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -89,8 +90,9 @@ router.post("/api/login", loginValidation, validate, async (req, res) => {
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour expiry
     const tokenData = new Token({ token, userId: user._id, expiresAt });
     await tokenData.save();
+    console.log(token);
 
-    res.json({ token });
+    res.status(200).json({ token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

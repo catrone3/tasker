@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TextField, Button, MenuItem, Box, Typography } from "@mui/material";
+import { getProjectSettings, getProjects } from "../helpers/api";
 
 const TaskCreation = ({ setOpen }) => {
   // State for form fields
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [urgency, setUrgency] = useState("");
@@ -15,11 +18,24 @@ const TaskCreation = ({ setOpen }) => {
   const [dueDate, setDueDate] = useState(null);
   const [projectSettings, setProjectSettings] = useState({});
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const projectsData = await getProjects();
+        setProjects(projectsData.projects);
+      } catch (error) {
+        console.error("Error fetching projects:", error.message);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
   // Function to fetch project settings
   const fetchProjectSettings = async (projectId) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/settings`);
-      const data = await response.json();
+      const data = await getProjectSettings(projectId);
       setProjectSettings(data.settings);
     } catch (error) {
       console.error("Error fetching project settings:", error);
@@ -64,7 +80,19 @@ const TaskCreation = ({ setOpen }) => {
           value={project}
           onChange={(e) => setProject(e.target.value)}
           fullWidth
-        />
+        >
+          {loadingProjects ? (
+            <MenuItem disabled>Loading projects...</MenuItem>
+          ) : projects.length === 0 ? (
+            <p>No projects available.</p>
+          ) : (
+            projects.map((project) => (
+              <MenuItem key={project.id} value={project.id}>
+                {project.name}
+              </MenuItem>
+            ))
+          )}
+        </TextField>
         <TextField
           label="Title"
           value={title}
@@ -93,6 +121,7 @@ const TaskCreation = ({ setOpen }) => {
           value={urgency}
           onChange={(e) => setUrgency(e.target.value)}
           fullWidth
+          disabled={!projectSettings}
         >
           {projectSettings.urgencyOptions &&
             projectSettings.urgencyOptions.map((option) => (
@@ -113,6 +142,7 @@ const TaskCreation = ({ setOpen }) => {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           fullWidth
+          disabled={!projectSettings}
         >
           {projectSettings.statusOptions &&
             projectSettings.statusOptions.map((option) => (

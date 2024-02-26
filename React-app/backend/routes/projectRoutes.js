@@ -41,6 +41,7 @@ router.get("/api/projects/:id", async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+    console.log(typeof project);
     res.json({ project });
   } catch (err) {
     console.error(err);
@@ -54,6 +55,25 @@ router.get("/api/projects", async (req, res) => {
     // Populate the projects field of the user document
     await req.user.populate("projects");
     res.json({ projects: req.user.projects });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET /api/projects/:name
+router.get("/api/projects/name/:name", async (req, res) => {
+  try {
+    const project = await Project.findOne(
+      { name: req.params.name },
+      { _id: 1 }
+    );
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    res.json({ projectId: project._id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
