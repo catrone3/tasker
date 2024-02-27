@@ -21,11 +21,23 @@ router.post(
   async (req, res) => {
     try {
       const { name } = req.body;
+
+      // Check if a project with the same name already exists
+      const existingProject = await Project.findOne({ name });
+
+      // If a project with the same name exists, return a 409 Conflict status code
+      if (existingProject) {
+        return res.status(409).json({ message: "Project name already exists" });
+      }
+
       // Create a new project
       const project = await Project.create({ name });
+
       // Add the project to the user's list of projects
       req.user.projects.push(project);
       await req.user.save();
+
+      // Return the newly created project
       res.status(201).json({ project });
     } catch (err) {
       console.error(err);

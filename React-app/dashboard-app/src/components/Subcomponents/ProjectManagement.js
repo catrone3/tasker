@@ -3,6 +3,7 @@ import {
   getProjects,
   updateProjectAccess,
   getProjectSettings,
+  getProjectByName,
 } from "../../helpers/api";
 
 const ProjectManagement = () => {
@@ -43,9 +44,9 @@ const ProjectManagement = () => {
     }
   };
 
-  const handleProjectChange = (projectId) => {
+  const handleProjectChange = async (projectId) => {
     setSelectedProject(projectId);
-    fetchSettings(projectId);
+    await fetchSettings(projectId);
   };
 
   return (
@@ -70,15 +71,97 @@ const ProjectManagement = () => {
           {selectedProject && (
             <div>
               <h3>{projects.find((p) => p.id === selectedProject)?.name}</h3>
+              <label htmlFor="permissions">Permissions:</label>
               <select
-                onChange={(e) =>
-                  handleProjectAccessChange(selectedProject, e.target.value)
-                }
+                id="permissions"
+                value={settings.permissions}
+                onChange={(e) => {
+                  const newSettings = {
+                    ...settings,
+                    permissions: e.target.value,
+                  };
+                  setProjectSettings(newSettings);
+                }}
               >
-                <option value="read">Read</option>
-                <option value="write">Write</option>
-                <option value="admin">Admin</option>
+                <option value="">Select Permissions</option>
+                {/* Map over urgency options */}
+                {settings.permissionsOptions &&
+                  settings.permissionsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
               </select>
+
+              {/* Render urgency and status dropdowns */}
+              <div>
+                <label htmlFor="urgency">Urgency:</label>
+                <select
+                  id="urgency"
+                  value={settings.urgency}
+                  onChange={(e) => {
+                    const newSettings = {
+                      ...settings,
+                      urgency: e.target.value,
+                    };
+                    setProjectSettings(newSettings);
+                  }}
+                >
+                  <option value="">Select Urgency</option>
+                  {/* Map over urgency options */}
+                  {settings.urgencyOptions &&
+                    settings.urgencyOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="status">Status:</label>
+                <select
+                  id="status"
+                  value={settings.status}
+                  onChange={(e) => {
+                    const newSettings = { ...settings, status: e.target.value };
+                    setProjectSettings(newSettings);
+                  }}
+                >
+                  <option value="">Select Status</option>
+                  {/* Map over status options */}
+                  {settings.statusOptions &&
+                    settings.statusOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Render custom fields */}
+              {Object.entries(settings.customFields || {}).map(
+                ([fieldName, value]) => (
+                  <div key={fieldName}>
+                    <label htmlFor={fieldName}>{fieldName}:</label>
+                    <input
+                      type="text"
+                      id={fieldName}
+                      value={value}
+                      onChange={(e) => {
+                        const newSettings = {
+                          ...settings,
+                          customFields: {
+                            ...settings.customFields,
+                            [fieldName]: e.target.value,
+                          },
+                        };
+                        setProjectSettings(newSettings);
+                      }}
+                    />
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>

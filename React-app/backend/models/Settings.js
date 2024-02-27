@@ -14,6 +14,10 @@ const settingsSchema = new mongoose.Schema({
     type: [String], // Example: ['Low', 'Medium', 'High']
     default: ["Low", "Medium", "High"],
   },
+  permissions: {
+    type: [String], // Example: ['Low', 'Medium', 'High']
+    default: ["Read", "Write", "Admin"],
+  },
   customFields: {
     type: Map,
     of: String,

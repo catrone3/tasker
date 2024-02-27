@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { TextField, Button, MenuItem, Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { getProjectSettings, getProjects } from "../helpers/api";
+import ProjectSelect from "./Subcomponents/ProjectSelect";
+import TaskFields from "./Subcomponents/TaskFields";
 
 const TaskCreation = ({ setOpen }) => {
-  // State for form fields
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [urgency, setUrgency] = useState("");
-  const [assignedTo, setAssignedTo] = useState("");
-  const [user, setUserProjects] = useState("");
-  const [status, setStatus] = useState("");
   const [project, setProject] = useState("");
-  const [dueDate, setDueDate] = useState(null);
   const [projectSettings, setProjectSettings] = useState({});
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    urgency: "",
+    assignedTo: "",
+    status: "",
+    dueDate: null,
+  });
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -32,24 +32,41 @@ const TaskCreation = ({ setOpen }) => {
     fetchProjects();
   }, []);
 
-  // Function to fetch project settings
-  const fetchProjectSettings = async (projectId) => {
-    try {
-      const data = await getProjectSettings(projectId);
-      setProjectSettings(data.settings);
-    } catch (error) {
-      console.error("Error fetching project settings:", error);
-    }
-  };
-
-  // useEffect to fetch project settings when project value changes
   useEffect(() => {
     if (project) {
       fetchProjectSettings(project);
     }
   }, [project]);
 
-  // Handle form submission
+  const fetchProjectSettings = async (project) => {
+    try {
+      const data = await getProjectSettings(project._id);
+      console.log(data);
+      setProjectSettings(data.settings);
+    } catch (error) {
+      console.error("Error fetching project settings:", error);
+    }
+  };
+
+  const handleProjectChange = (selectedProjectId) => {
+    setProject(selectedProjectId);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleDateChange = (date) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      dueDate: date,
+    }));
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
     // Handle form submission logic here
@@ -74,83 +91,20 @@ const TaskCreation = ({ setOpen }) => {
         Create Task
       </Typography>
       <form onSubmit={handleSubmit}>
-        <TextField
-          select
-          label="Project"
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          fullWidth
-        >
-          {loadingProjects ? (
-            <MenuItem disabled>Loading projects...</MenuItem>
-          ) : projects.length === 0 ? (
-            <p>No projects available.</p>
-          ) : (
-            projects.map((project) => (
-              <MenuItem key={project.id} value={project.id}>
-                {project.name}
-              </MenuItem>
-            ))
-          )}
-        </TextField>
-        <TextField
-          label="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          fullWidth
+        <ProjectSelect
+          projects={projects}
+          loadingProjects={loadingProjects}
+          project={project}
+          onChange={handleProjectChange}
         />
-        <TextField
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          fullWidth
-          multiline
-        />
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            label="Due Date"
-            value={dueDate}
-            onChange={(date) => setDueDate(date)}
-            fullWidth
-            inputFormat="MM/dd/yyyy"
+        {project && (
+          <TaskFields
+            formData={formData}
+            projectSettings={projectSettings}
+            onChange={handleFormChange}
+            onDateChange={handleDateChange}
           />
-        </LocalizationProvider>
-        <TextField
-          select
-          label="Urgency"
-          value={urgency}
-          onChange={(e) => setUrgency(e.target.value)}
-          fullWidth
-          disabled={!projectSettings}
-        >
-          {projectSettings.urgencyOptions &&
-            projectSettings.urgencyOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-        </TextField>
-        <TextField
-          label="Assigned To"
-          value={assignedTo}
-          onChange={(e) => setAssignedTo(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          select
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          fullWidth
-          disabled={!projectSettings}
-        >
-          {projectSettings.statusOptions &&
-            projectSettings.statusOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-        </TextField>
+        )}
         <Button type="submit" variant="contained" color="primary">
           Create Task
         </Button>

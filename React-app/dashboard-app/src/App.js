@@ -34,14 +34,17 @@ function App() {
             setIsLoggedIn(true);
           } else {
             // Token is invalid, redirect to login
+            setIsLoggedIn(false);
             history.push("/login");
           }
         } catch (error) {
+          setIsLoggedIn(false);
           console.error("Error validating token:", error);
           // Handle error as needed
         }
       } else {
         // No token found, redirect to login
+        setIsLoggedIn(false);
         history.push("/login");
       }
     };
@@ -51,6 +54,7 @@ function App() {
   }, [history, setIsLoggedIn]);
 
   const handleLogin = () => {
+    console.log(isLoggedIn);
     setIsLoggedIn(true);
   };
 
@@ -59,23 +63,28 @@ function App() {
       <Navbar />
       <BrowserRouter location={history.location} navigator={history}>
         <Routes>
-          <Route
-            path="*"
-            element={<ProtectedRoutes isLoggedIn={isLoggedIn} />}
-          />
-          <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+          {isLoggedIn ? (
+            <Route
+              path="*"
+              element={<ProtectedRoutes isLoggedIn={isLoggedIn} />}
+            />
+          ) : (
+            <>
+              <Route path="*" element={<Navigate to="/login" />} />
+              <Route
+                path="/login"
+                element={<LoginPage onLogin={handleLogin} />}
+              />
+            </>
+          )}
         </Routes>
       </BrowserRouter>
     </div>
   );
 }
 
-const ProtectedRoutes = (isLoggedIn) => {
+const ProtectedRoutes = () => {
   const [open, setOpen] = useState(false);
-  console.log(`isLoggedIn: ${isLoggedIn}`);
-  if (!isLoggedIn) {
-    return <Navigate to="/login" />;
-  }
 
   return (
     <div className="container">

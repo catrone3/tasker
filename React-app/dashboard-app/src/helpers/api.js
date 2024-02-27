@@ -50,8 +50,7 @@ export const getProjectSettings = async (projectId) => {
       },
     }
   );
-  const data = await response.json();
-  return data;
+  return response;
 };
 
 export const getProjects = async () => {
@@ -92,18 +91,31 @@ export const getNextTasks = async () => {
 };
 
 export const createProject = async (name) => {
-  const token = getToken();
-  const payload = JSON.stringify({ name });
-  const response = await fetch(`${BASE_URL}/api/projects`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: payload,
-  });
-  const data = await response.json();
-  return data;
+  try {
+    const token = getToken();
+    const payload = JSON.stringify({ name });
+    const response = await fetch(`${BASE_URL}/api/projects`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: payload,
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    const data = await response.json();
+
+    // Assuming putProjectSettings returns a promise
+    await putProjectSettings(data.project._id, {});
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const registerUser = async (username, email, password) => {
@@ -138,11 +150,13 @@ export const updateProjectAccess = async (projectName) => {
 
 export const putProjectSettings = async (projectId, Settings) => {
   const token = getToken();
-  const currentSettings = getProjectSettings(projectId);
   var payload = Settings;
-  if (!currentSettings) {
-    payload = getProjectSettingsByName("Default");
-  }
+  getProjectSettings(projectId).then((response) => {
+    if (response.status === 500) {
+      payload = getProjectByName("Default");
+      payload._id = projectId;
+    }
+  });
   const response = await fetch(
     `${BASE_URL}/api/projects/${projectId}/settings`,
     {
@@ -157,13 +171,14 @@ export const putProjectSettings = async (projectId, Settings) => {
   return data;
 };
 
-export const getProjectSettingsByName = async (project) => {
+export const getProjectByName = async (project) => {
   const token = getToken();
-  const response = fetch(`${BASE_URL}/api/projects/${project}`, {
+  const response = await fetch(`${BASE_URL}/api/projects/name/${project}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
   const data = await response.json();
-  return data;
+  console.log(data);
+  return data.projectId;
 };
