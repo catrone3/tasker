@@ -14,8 +14,22 @@ const settingsSchema = new mongoose.Schema({
     type: [String], // Example: ['Low', 'Medium', 'High']
     default: ["Low", "Medium", "High"],
   },
-  permissions: {
-    type: [String], // Example: ['Low', 'Medium', 'High']
+  permissions: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      level: {
+        type: String,
+        enum: ["Read", "Write", "Admin"],
+        default: "Read",
+      },
+    },
+  ],
+  permissionOptions: {
+    type: [String],
     default: ["Read", "Write", "Admin"],
   },
   customFields: {

@@ -7,14 +7,22 @@ export const getToken = () => {
   return localStorage.getItem("token");
 };
 
-export const isTokenValid = (token) => {
+export const isTokenValid = async (token) => {
   if (!token) {
     return false;
   }
   const decodedToken = jwtDecode(token); // Decode the token
   const currentTime = Date.now() / 1000; // Get current time in seconds
-  const experationTime = decodedToken.exp;
-  return currentTime < experationTime;
+  const expirationTime = decodedToken.exp;
+  const response = await fetch(`${BASE_URL}/api/projects`, {
+    headers: {
+      Authorization: `Bearer: ${token}`,
+    },
+  });
+  if (response.message === "Invalid Token") {
+    return false;
+  }
+  return currentTime < expirationTime;
 };
 
 const handleResponse = async (response) => {
@@ -50,7 +58,8 @@ export const getProjectSettings = async (projectId) => {
       },
     }
   );
-  return response;
+  const data = await response.json();
+  return data;
 };
 
 export const getProjects = async () => {
@@ -108,10 +117,6 @@ export const createProject = async (name) => {
     }
 
     const data = await response.json();
-
-    // Assuming putProjectSettings returns a promise
-    await putProjectSettings(data.project._id, {});
-
     return data;
   } catch (error) {
     throw error;
@@ -179,6 +184,43 @@ export const getProjectByName = async (project) => {
     },
   });
   const data = await response.json();
-  console.log(data);
   return data.projectId;
+};
+
+export const updateProjectPermissions = async (
+  projectId,
+  username,
+  permissions
+) => {
+  const token = getToken();
+  const userId = await findUserId(username);
+  console.log(permissions);
+  const payload = JSON.stringify({ userId, permissions });
+  const response = await fetch(
+    `${BASE_URL}/api/projects/${projectId}/permissions`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: payload,
+    }
+  );
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(`Failed to update project permissions: ${errorMessage}`);
+  }
+};
+
+export const findUserId = async (username) => {
+  const token = getToken();
+  const response = await fetch(`${BASE_URL}/api/users/${username}/userId`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json();
+  return data.userId;
 };

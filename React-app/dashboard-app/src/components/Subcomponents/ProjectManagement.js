@@ -4,6 +4,7 @@ import {
   updateProjectAccess,
   getProjectSettings,
   getProjectByName,
+  updateProjectPermissions,
 } from "../../helpers/api";
 
 const ProjectManagement = () => {
@@ -11,6 +12,9 @@ const ProjectManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState("");
   const [settings, setProjectSettings] = useState({});
+  const [username, setUsername] = useState("");
+  const [permissions, setPermissions] = useState("");
+  const [permissionsOptions, setPermissionsOptions] = useState([]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -26,10 +30,13 @@ const ProjectManagement = () => {
     fetchProjects();
   }, []);
 
-  const fetchSettings = async (projectId) => {
+  const fetchSettings = async (projectName) => {
     try {
-      const projectSettings = await getProjectSettings(projectId);
-      setProjectSettings(projectSettings);
+      const projectId = await getProjectByName(projectName);
+      getProjectSettings(projectId).then((res) => {
+        setProjectSettings(res);
+        setPermissionsOptions(res.permissionOptions);
+      });
     } catch (err) {
       console.error("Error fetching project settings:", err.message);
     }
@@ -47,6 +54,18 @@ const ProjectManagement = () => {
   const handleProjectChange = async (projectId) => {
     setSelectedProject(projectId);
     await fetchSettings(projectId);
+  };
+
+  const handlePermissionsChange = async () => {
+    try {
+      const projectId = projects.find(
+        (obj) => obj.name === selectedProject
+      )._id;
+      await updateProjectPermissions(projectId, username, permissions);
+      console.log("Project permissions updated successfully!");
+    } catch (error) {
+      console.error("Error updating project permissions:", error.message);
+    }
   };
 
   return (
@@ -71,27 +90,31 @@ const ProjectManagement = () => {
           {selectedProject && (
             <div>
               <h3>{projects.find((p) => p.id === selectedProject)?.name}</h3>
+              <label htmlFor="username">Username:</label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+              />
+
               <label htmlFor="permissions">Permissions:</label>
               <select
                 id="permissions"
-                value={settings.permissions}
-                onChange={(e) => {
-                  const newSettings = {
-                    ...settings,
-                    permissions: e.target.value,
-                  };
-                  setProjectSettings(newSettings);
-                }}
+                value={permissions}
+                onChange={(e) => setPermissions(e.target.value)}
               >
                 <option value="">Select Permissions</option>
-                {/* Map over urgency options */}
-                {settings.permissionsOptions &&
-                  settings.permissionsOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
+                {permissionsOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
+              <button onClick={handlePermissionsChange}>
+                Update Permissions
+              </button>
 
               {/* Render urgency and status dropdowns */}
               <div>

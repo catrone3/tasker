@@ -147,4 +147,42 @@ router.delete("/api/users/:id/projects/:projectId", async (req, res) => {
   }
 });
 
+// GET request to retrieve a user's username by their ID
+router.get("/api/users/:userId/username", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send the username in the response
+    res.status(200).json({ username: user.username });
+  } catch (err) {
+    console.error("Error retrieving user's username:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET request to retrieve a user's ID by their username
+router.get("/api/users/:username/userId", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send the user ID in the response
+    res.status(200).json({ userId: user._id });
+  } catch (err) {
+    console.error("Error retrieving user's ID:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

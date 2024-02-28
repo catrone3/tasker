@@ -37,6 +37,11 @@ router.post(
       req.user.projects.push(project);
       await req.user.save();
 
+      // Create project settings
+      const settings = await Settings.create({
+        projectId: project._id,
+        permissions: [{ user: req.user._id, level: "Admin" }],
+      });
       // Return the newly created project
       res.status(201).json({ project });
     } catch (err) {
@@ -113,6 +118,7 @@ router.get("/api/projects/:projectId/settings", async (req, res) => {
     if (!settings) {
       return res.status(404).json({ message: "Settings not found" });
     }
+    console.log(settings);
     res.json(settings);
   } catch (err) {
     console.error(err);
@@ -180,6 +186,54 @@ router.post("/api/projects/:projectId/tasks", async (req, res) => {
     res.status(201).json({ task });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/api/projects/:projectId/permissions", async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { username, permissions } = req.body;
+
+    // Find the project by ID
+    const project = await Settings.findOne({ projectId });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Get the userId of anyone with the admin permission level
+    const adminUsers = project.permissions.filter(
+      (user) => user.permissions === "Admin"
+    );
+    console.log(adminUsers);
+    const adminUserIds = adminUsers.map((user) => user.user);
+    console.log(adminUserIds);
+
+    // Compare adminUserIds to the userId of the requesting user
+    if (!adminUserIds.includes(req.user._id)) {
+      return res.status(403).json({
+        message: "You do not have permission to update project permissions",
+      });
+    }
+
+    // Update the permissions for the specified user
+    const existingUserIndex = project.permissions.findIndex(
+      (user) => user.username === username
+    );
+    if (existingUserIndex !== -1) {
+      project.permissions[existingUserIndex].permissions = permissions;
+    } else {
+      project.permissions.push({ username, permissions });
+    }
+
+    // Save the updated project
+    await project.save();
+
+    res
+      .status(200)
+      .json({ message: "Project permissions updated successfully" });
+  } catch (err) {
+    console.error("Error updating project permissions:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
