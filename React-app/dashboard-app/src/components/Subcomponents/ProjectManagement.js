@@ -1,20 +1,49 @@
 import React, { useEffect, useState } from "react";
 import {
   getProjects,
-  updateProjectAccess,
   getProjectSettings,
   getProjectByName,
   updateProjectPermissions,
+  putProjectSettings,
 } from "../../helpers/api";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
+
+let theme = createTheme({
+  // Theme customization goes here as usual, including tonalOffset and/or
+  // contrastThreshold as the augmentColor() function relies on these
+});
+
+theme = createTheme(theme, {
+  // Custom colors created with augmentColor go here
+  palette: {
+    sky: theme.palette.augmentColor({
+      color: {
+        main: "#5BC3EB",
+      },
+      name: "sky",
+    }),
+  },
+});
 
 const ProjectManagement = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState("");
   const [settings, setProjectSettings] = useState({});
+  const [projectId, setProjectId] = useState("");
   const [username, setUsername] = useState("");
   const [permissions, setPermissions] = useState("");
   const [permissionsOptions, setPermissionsOptions] = useState([]);
+  const [newFieldName, setNewFieldName] = useState("");
+  const [newFieldValue, setNewFieldValue] = useState("");
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -32,8 +61,9 @@ const ProjectManagement = () => {
 
   const fetchSettings = async (projectName) => {
     try {
-      const projectId = await getProjectByName(projectName);
-      getProjectSettings(projectId).then((res) => {
+      const Id = await getProjectByName(projectName);
+      setProjectId(Id);
+      getProjectSettings(Id).then((res) => {
         setProjectSettings(res);
         setPermissionsOptions(res.permissionOptions);
       });
@@ -42,12 +72,18 @@ const ProjectManagement = () => {
     }
   };
 
-  const handleProjectAccessChange = async (projectId, accessLevel) => {
-    try {
-      await updateProjectAccess(projectId, accessLevel);
-      console.log("Project access updated successfully!");
-    } catch (error) {
-      console.error("Error updating project access:", error.message);
+  const handleAddCustomField = () => {
+    if (newFieldName.trim() !== "") {
+      const newSettings = {
+        ...settings,
+        customFields: {
+          ...settings.customFields,
+          [newFieldName]: newFieldValue,
+        },
+      };
+      setProjectSettings(newSettings);
+      setNewFieldName("");
+      setNewFieldValue("");
     }
   };
 
@@ -65,6 +101,18 @@ const ProjectManagement = () => {
       console.log("Project permissions updated successfully!");
     } catch (error) {
       console.error("Error updating project permissions:", error.message);
+    }
+  };
+  const handleSubmit = async () => {
+    try {
+      // Send updated project settings to your backend API
+      const response = await putProjectSettings(projectId, settings);
+      if (!response.ok) {
+        throw new Error("Failed to save project settings");
+      }
+      console.log("Project settings saved successfully!");
+    } catch (error) {
+      console.error("Error saving project settings:", error);
     }
   };
 
@@ -119,7 +167,8 @@ const ProjectManagement = () => {
               {/* Render urgency and status dropdowns */}
               <div>
                 <label htmlFor="urgency">Urgency:</label>
-                <select
+                <input
+                  type="text"
                   id="urgency"
                   value={settings.urgency}
                   onChange={(e) => {
@@ -129,37 +178,35 @@ const ProjectManagement = () => {
                     };
                     setProjectSettings(newSettings);
                   }}
-                >
-                  <option value="">Select Urgency</option>
-                  {/* Map over urgency options */}
-                  {settings.urgencyOptions &&
-                    settings.urgencyOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                </select>
+                />
               </div>
 
               <div>
                 <label htmlFor="status">Status:</label>
-                <select
+                <input
+                  type="text"
                   id="status"
                   value={settings.status}
                   onChange={(e) => {
                     const newSettings = { ...settings, status: e.target.value };
                     setProjectSettings(newSettings);
                   }}
-                >
-                  <option value="">Select Status</option>
-                  {/* Map over status options */}
-                  {settings.statusOptions &&
-                    settings.statusOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                </select>
+                />
+              </div>
+              <div>
+                <label htmlFor="status">Permission Levels:</label>
+                <input
+                  type="text"
+                  id="permissionOptions"
+                  value={settings.permissionOptions}
+                  onChange={(e) => {
+                    const newSettings = {
+                      ...settings,
+                      permissionOptions: e.target.value,
+                    };
+                    setProjectSettings(newSettings);
+                  }}
+                />
               </div>
 
               {/* Render custom fields */}
@@ -185,6 +232,23 @@ const ProjectManagement = () => {
                   </div>
                 )
               )}
+              {/* Add custom field */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Field Name"
+                  value={newFieldName}
+                  onChange={(e) => setNewFieldName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder="Field Value"
+                  value={newFieldValue}
+                  onChange={(e) => setNewFieldValue(e.target.value)}
+                />
+                <button onClick={handleAddCustomField}>Add Field</button>
+              </div>
+              <button onClick={handleSubmit}>Save</button>
             </div>
           )}
         </div>

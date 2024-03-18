@@ -130,15 +130,24 @@ router.get("/api/projects/:projectId/settings", async (req, res) => {
 router.put("/api/projects/:projectId/settings", async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { status, urgency } = req.body;
-    const settings = await Settings.findOneAndUpdate(
-      { projectId },
-      { status, urgency },
-      { new: true }
-    );
+    const { status, urgency, permissionsOptions, customFields } = req.body;
+
+    // Find the project settings by projectId
+    let settings = await Settings.findOne({ projectId });
+
+    // If project settings don't exist, create new ones
     if (!settings) {
-      return res.status(404).json({ message: "Settings not found" });
+      settings = new Settings({ projectId });
     }
+
+    // Update status, urgency, permissionOptions, and customFields
+    settings.status = status;
+    settings.urgency = urgency;
+    settings.permissionsOptions = permissionsOptions;
+    settings.customFields = customFields;
+
+    // Save the updated project settings
+    await settings.save();
     res.json(settings);
   } catch (err) {
     console.error(err);
@@ -193,8 +202,8 @@ router.post("/api/projects/:projectId/tasks", async (req, res) => {
 router.put("/api/projects/:projectId/permissions", async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { username, permissions } = req.body;
-
+    const { user, permissions } = req.body;
+    const level = permissions;
     // Find the project by ID
     const project = await Settings.findOne({ projectId });
     if (!project) {
@@ -203,27 +212,33 @@ router.put("/api/projects/:projectId/permissions", async (req, res) => {
 
     // Get the userId of anyone with the admin permission level
     const adminUsers = project.permissions.filter(
-      (user) => user.permissions === "Admin"
+      (user) => user.level === "Admin"
     );
-    console.log(adminUsers);
+
     const adminUserIds = adminUsers.map((user) => user.user);
-    console.log(adminUserIds);
 
     // Compare adminUserIds to the userId of the requesting user
-    if (!adminUserIds.includes(req.user._id)) {
+    let isUserAdmin = false;
+    for (const adminUserId of adminUserIds) {
+      if (req.user._id.equals(adminUserId)) {
+        isUserAdmin = true;
+        break;
+      }
+    }
+
+    if (!isUserAdmin) {
       return res.status(403).json({
         message: "You do not have permission to update project permissions",
       });
     }
-
     // Update the permissions for the specified user
     const existingUserIndex = project.permissions.findIndex(
-      (user) => user.username === username
+      (userObj) => userObj.user.toString() === user
     );
     if (existingUserIndex !== -1) {
-      project.permissions[existingUserIndex].permissions = permissions;
+      project.permissions[existingUserIndex].level = level;
     } else {
-      project.permissions.push({ username, permissions });
+      project.permissions.push({ user, level });
     }
 
     // Save the updated project

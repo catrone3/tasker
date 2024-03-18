@@ -1,5 +1,23 @@
 import React, { useState } from "react";
 import { createProject, putProjectSettings } from "../../helpers/api";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+let theme = createTheme({
+  // Theme customization goes here as usual, including tonalOffset and/or
+  // contrastThreshold as the augmentColor() function relies on these
+});
+
+theme = createTheme(theme, {
+  // Custom colors created with augmentColor go here
+  palette: {
+    sky: theme.palette.augmentColor({
+      color: {
+        main: "#5BC3EB",
+      },
+      name: "sky",
+    }),
+  },
+});
 
 const ProjectCreationForm = () => {
   const [projectName, setProjectName] = useState("");

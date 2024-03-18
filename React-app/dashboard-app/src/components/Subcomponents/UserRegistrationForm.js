@@ -1,7 +1,26 @@
 // components/UserRegistrationForm.js
 
 import React, { useState } from "react";
+import { TextField, Button } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { registerUser } from "../../helpers/api"; // Assuming you have an API function for user registration
+
+let theme = createTheme({
+  // Theme customization goes here as usual, including tonalOffset and/or
+  // contrastThreshold as the augmentColor() function relies on these
+});
+
+theme = createTheme(theme, {
+  // Custom colors created with augmentColor go here
+  palette: {
+    sky: theme.palette.augmentColor({
+      color: {
+        main: "#5BC3EB",
+      },
+      name: "sky",
+    }),
+  },
+});
 
 const UserRegistrationForm = () => {
   const [username, setUsername] = useState("");
@@ -21,27 +40,42 @@ const UserRegistrationForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
-      />
-      <input
-        type="text"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit">Register</button>
-    </form>
+    <ThemeProvider theme={theme}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <div>
+          <TextField
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            label="Username"
+          />
+        </div>
+        <div>
+          <TextField
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            label="Email"
+          />
+        </div>
+        <div>
+          <TextField
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            label="Password"
+          />
+        </div>
+        <div>
+          <Button variant="contained" type="submit" color="sky">
+            Register
+          </Button>
+        </div>
+      </form>
+    </ThemeProvider>
   );
 };
 

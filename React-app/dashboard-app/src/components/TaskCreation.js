@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { getProjectSettings, getProjects } from "../helpers/api";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ProjectSelect from "./Subcomponents/ProjectSelect";
 import TaskFields from "./Subcomponents/TaskFields";
+
+let theme = createTheme({
+  // Theme customization goes here as usual, including tonalOffset and/or
+  // contrastThreshold as the augmentColor() function relies on these
+});
+
+theme = createTheme(theme, {
+  // Custom colors created with augmentColor go here
+  palette: {
+    sky: theme.palette.augmentColor({
+      color: {
+        main: "#5BC3EB",
+      },
+      name: "sky",
+    }),
+  },
+});
 
 const TaskCreation = ({ setOpen }) => {
   const [projects, setProjects] = useState([]);
@@ -74,42 +92,44 @@ const TaskCreation = ({ setOpen }) => {
   };
 
   return (
-    <Box
-      sx={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        bgcolor: "background.paper",
-        boxShadow: 24,
-        p: 4,
-        width: 400,
-        borderRadius: 4,
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Create Task
-      </Typography>
-      <form onSubmit={handleSubmit}>
-        <ProjectSelect
-          projects={projects}
-          loadingProjects={loadingProjects}
-          project={project}
-          onChange={handleProjectChange}
-        />
-        {project && (
-          <TaskFields
-            formData={formData}
-            projectSettings={projectSettings}
-            onChange={handleFormChange}
-            onDateChange={handleDateChange}
-          />
-        )}
-        <Button type="submit" variant="contained" color="primary">
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          p: 4,
+          width: 400,
+          borderRadius: 4,
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
           Create Task
-        </Button>
-      </form>
-    </Box>
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <ProjectSelect
+            projects={projects}
+            loadingProjects={loadingProjects}
+            project={project}
+            onChange={handleProjectChange}
+          />
+          {project && (
+            <TaskFields
+              formData={formData}
+              projectSettings={projectSettings}
+              onChange={handleFormChange}
+              onDateChange={handleDateChange}
+            />
+          )}
+          <Button type="submit" variant="contained" color="sky">
+            Create Task
+          </Button>
+        </form>
+      </Box>
+    </ThemeProvider>
   );
 };
 

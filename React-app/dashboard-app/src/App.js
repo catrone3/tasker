@@ -11,7 +11,7 @@ import Settings from "./components/Settings";
 import KanbanBoardPage from "./components/Subcomponents/KanbanBoardPage";
 import BacklogPage from "./components/Subcomponents/BacklogPage";
 import ProjectDetail from "./components/ProjectDetails";
-import { getToken, isTokenValid } from "./helpers/api";
+import { getToken, isTokenValid, getProjects } from "./helpers/api";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { createMemoryHistory } from "history";
@@ -85,11 +85,32 @@ function App() {
 
 const ProtectedRoutes = () => {
   const [open, setOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    // Make API call to fetch projects
+    getProjects()
+      .then((data) => {
+        console.log(data.projects);
+        setProjects(data.projects);
+      })
+      .catch((error) => console.log(error));
+  }, []);
 
   return (
     <div className="container">
       <Sidebar setOpen={setOpen} />
       <main>
+        <div className="flex justify-left">
+          <button className="mr-2">Create Task</button>
+          <select className="ml-2">
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <Modal open={open} onClose={() => setOpen(false)}>
           <TaskCreation setOpen={setOpen} />
         </Modal>

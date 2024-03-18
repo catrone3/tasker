@@ -16,10 +16,13 @@ export const isTokenValid = async (token) => {
   const expirationTime = decodedToken.exp;
   const response = await fetch(`${BASE_URL}/api/projects`, {
     headers: {
-      Authorization: `Bearer: ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
-  if (response.message === "Invalid Token") {
+  const data = await response.json();
+  if (data.message === "Invalid Token") {
+    return false;
+  } else if (data.message === "User not found") {
     return false;
   }
   return currentTime < expirationTime;
@@ -165,7 +168,7 @@ export const putProjectSettings = async (projectId, Settings) => {
   const response = await fetch(
     `${BASE_URL}/api/projects/${projectId}/settings`,
     {
-      method: "POST",
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -193,9 +196,9 @@ export const updateProjectPermissions = async (
   permissions
 ) => {
   const token = getToken();
-  const userId = await findUserId(username);
+  const user = await findUserId(username);
   console.log(permissions);
-  const payload = JSON.stringify({ userId, permissions });
+  const payload = JSON.stringify({ user, permissions });
   const response = await fetch(
     `${BASE_URL}/api/projects/${projectId}/permissions`,
     {

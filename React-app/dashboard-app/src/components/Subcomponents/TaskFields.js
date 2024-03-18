@@ -40,8 +40,8 @@ const TaskFields = ({ formData, projectSettings, onChange, onDateChange }) => {
         fullWidth
         disabled={!projectSettings}
       >
-        {projectSettings.urgencyOptions &&
-          projectSettings.urgencyOptions.map((option) => (
+        {projectSettings.urgency &&
+          projectSettings.urgency.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
             </MenuItem>
@@ -63,8 +63,8 @@ const TaskFields = ({ formData, projectSettings, onChange, onDateChange }) => {
         fullWidth
         disabled={!projectSettings}
       >
-        {projectSettings.statusOptions &&
-          projectSettings.statusOptions.map((option) => (
+        {projectSettings.status &&
+          projectSettings.status.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
             </MenuItem>
