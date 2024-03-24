@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+} from "@mui/material";
 import { getProjectSettings, getProjects } from "../helpers/api";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import ProjectSelect from "./Subcomponents/ProjectSelect";
 import TaskFields from "./Subcomponents/TaskFields";
 
 let theme = createTheme({
@@ -27,6 +34,7 @@ const TaskCreation = ({ setOpen }) => {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [project, setProject] = useState("");
   const [projectSettings, setProjectSettings] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -60,7 +68,8 @@ const TaskCreation = ({ setOpen }) => {
     try {
       const data = await getProjectSettings(project._id);
       console.log(data);
-      setProjectSettings(data.settings);
+      setProjectSettings(data);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching project settings:", error);
     }
@@ -109,25 +118,42 @@ const TaskCreation = ({ setOpen }) => {
         <Typography variant="h6" gutterBottom>
           Create Task
         </Typography>
-        <form onSubmit={handleSubmit}>
-          <ProjectSelect
-            projects={projects}
-            loadingProjects={loadingProjects}
-            project={project}
-            onChange={handleProjectChange}
-          />
-          {project && (
+        <FormControl>
+          <InputLabel id="project-select-label">Project</InputLabel>
+          <Select
+            labelId="project-select-label"
+            id="project-select"
+            value={project}
+            onChange={(e) => handleProjectChange(e.target.value)}
+            style={{ width: "100%", minWidth: 200 }}
+          >
+            {loadingProjects ? (
+              <MenuItem disabled>Loading projects...</MenuItem>
+            ) : projects.length === 0 ? (
+              <MenuItem disabled>No projects available.</MenuItem>
+            ) : (
+              projects.map((project) => (
+                <MenuItem key={project.id} value={project}>
+                  {project.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+
+        {!isLoading && (
+          <form onSubmit={handleSubmit}>
             <TaskFields
               formData={formData}
               projectSettings={projectSettings}
               onChange={handleFormChange}
               onDateChange={handleDateChange}
             />
-          )}
-          <Button type="submit" variant="contained" color="sky">
-            Create Task
-          </Button>
-        </form>
+            <Button type="submit" variant="contained" color="sky">
+              Create Task
+            </Button>
+          </form>
+        )}
       </Box>
     </ThemeProvider>
   );

@@ -44,3 +44,7 @@ Main accent color - #F06449
     padding: 20px;
   }
   
+  .logo {
+    max-width: 100px; /* Replace with your desired maximum width */
+    max-height: 50px; /* Replace with your desired maximum height */
+  }

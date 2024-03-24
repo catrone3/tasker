@@ -60,7 +60,7 @@ function App() {
 
   return (
     <div className="App">
-      <Navbar />
+      <Navbar isLoggedIn={isLoggedIn} />
       <BrowserRouter location={history.location} navigator={history}>
         <Routes>
           {isLoggedIn ? (
