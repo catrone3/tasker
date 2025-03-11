@@ -21,7 +21,7 @@ const Navbar = (isLoggedIn) => {
           <h1>Zephyr</h1>
         </div>
 
-        {isLoggedIn && (
+        {isLoggedIn.isLoggedIn && (
           <div className="flex justify-end">
             <Button className="mr-2">Settings</Button>
             <Button className="mr-2">Logout</Button>
